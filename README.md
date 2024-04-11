@@ -1,4 +1,5 @@
 You want to test an interface in Business Central, but you always have to Publish your app, because of changing variables?
+
 You can get around this issue with this JSON-Form type AL Page.
 
 Create a JSON Object with a scheme like this:
