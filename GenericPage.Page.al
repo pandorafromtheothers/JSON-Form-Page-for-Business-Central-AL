@@ -350,7 +350,7 @@ page 50280 "Generic Page"
             _tokenCatalogLine.AppendLine(Format(_index) + '-' + _key + GetBaseRequestDataTypeLbl(GetElement(_key, baseRequest)));
         end;
         _fullText.AppendLine('-Check the box to set undefined variables as null');
-        _fullText.AppendLine('-Decide what you fill out! Separate the front numbers presented with commas(1,2,3)');
+        _fullText.AppendLine('-Decide what you fill out! Separate the front numbers presented with commas(1,2,3). Leave it empty to fill out all.');
         _fullText.AppendLine(_tokenCatalogLine.ToText());
         exit(_fullText.ToText());
     end;
