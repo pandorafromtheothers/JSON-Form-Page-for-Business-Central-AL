@@ -137,7 +137,8 @@ page 50280 "Generic Page"
                     _selectedToken := baseRequest.Keys().Get(ConvertToDecimal(_key));
                     _partialTokenValue := GetElement(_selectedToken, baseRequest);
                     _partialRequest.Add(_selectedToken, _partialTokenValue);
-                end;
+                end else
+                    exit(OpenFullRequestAsText(baseRequest, result));
             end;
             if not MakeRequestWithPages(_partialRequest, _partialRequest) then
                 exit;
@@ -276,6 +277,23 @@ page 50280 "Generic Page"
         exit(true);
     end;
 
+    local procedure OpenFullRequestAsText(baseRequest: JsonObject; var result: JsonObject): Boolean
+    var
+        _p: Page "Generic Page";
+        _key: Text;
+        _v: Variant;
+    begin
+        foreach _key in baseRequest.Keys do
+            baseRequest.Replace(_key, GetDefaultValueAndFieldTypeByText(L.GetElement(_key, baseRequest), _v));
+        _p.SetVisibile('Full Base Request', '');
+        _p.SetTextValue(Format(baseRequest));
+        _p.LookupMode(true);
+        if _p.RunModal() <> Action::LookupOK then
+            exit;
+
+        exit(result.ReadFrom(_p.GetPageValue('').AsText()));
+    end;
+
     local procedure AddValueToRequest(keyArg: Text; singleToken: JsonToken; var result: JsonValue): Boolean
     var
         _p: Page "Generic Page";
@@ -345,6 +363,7 @@ page 50280 "Generic Page"
         _tokenCatalogLine: TextBuilder;
         _fullText: TextBuilder;
     begin
+        _tokenCatalogLine.AppendLine(Format(_index) + '-' + 'Full Request as Text' + ' (value)');
         foreach _key in baseRequest.Keys do begin
             _index += 1;
             _tokenCatalogLine.AppendLine(Format(_index) + '-' + _key + GetBaseRequestDataTypeLbl(GetElement(_key, baseRequest)));
@@ -363,6 +382,11 @@ page 50280 "Generic Page"
             exit(' (object)');
         if token.IsArray then
             exit(' (array)');
+    end;
+
+    procedure SetTextValue(value: Text)
+    begin
+        TextVar := value;
     end;
 
     var
