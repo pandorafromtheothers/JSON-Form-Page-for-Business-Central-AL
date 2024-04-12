@@ -22,3 +22,13 @@ You can also use it to just receive singular values from the form.
 Check out the Test Page to get familiar with it.
 
 Have Fun!
+
+**************************************
+
+Update #1
+
+You can now type 0 on the selection page to receive your request as text.
+
+Edit the text in an editor to your preferences, and copy it back to the input field.
+
+After pressing OK, the text input is processed as the JSON Object.
