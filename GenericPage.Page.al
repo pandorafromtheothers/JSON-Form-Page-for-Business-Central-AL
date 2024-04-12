@@ -83,6 +83,12 @@ page 50280 "Generic Page"
                     ApplicationArea = All;
                     Visible = SeeDate;
                 }
+                field(DateTimeVar; DateTimeVar)
+                {
+                    Caption = '';
+                    ApplicationArea = All;
+                    Visible = SeeDateTime;
+                }
             }
         }
     }
@@ -138,7 +144,7 @@ page 50280 "Generic Page"
                     _partialTokenValue := GetElement(_selectedToken, baseRequest);
                     _partialRequest.Add(_selectedToken, _partialTokenValue);
                 end else
-                    exit(OpenFullRequestAsText(baseRequest, result));
+                    exit(OpenFullRequestAsText(baseRequest, _setEmptyToNull, result));
             end;
             if not MakeRequestWithPages(_partialRequest, _partialRequest) then
                 exit;
@@ -170,6 +176,8 @@ page 50280 "Generic Page"
                 exit(BaseBooleanLbl);
             FieldType::Date:
                 exit(BaseDateLbl);
+            FieldType::DateTime:
+                exit(BaseDateTimeLbl);
         end;
     end;
 
@@ -183,6 +191,8 @@ page 50280 "Generic Page"
             result.SetValue(BooleanVar);
         if typeVariant.IsDate then
             result.SetValue(DateVar);
+        if typeVariant.IsDateTime then
+            result.SetValue(DateTimeVar);
     end;
 
     local procedure GetDefaultValueAndFieldTypeByText(fieldTypeValueText: JsonToken; var type: Variant) valueResult: JsonValue
@@ -210,6 +220,11 @@ page 50280 "Generic Page"
                     begin
                         type := '';
                         valueResult.SetValue('');
+                    end;
+                BaseDateTimeLbl:
+                    begin
+                        type := CreateDateTime(Today(), Time());
+                        valueResult.SetValue(CreateDateTime(Today(), Time()));
                     end;
             end;
         end;
@@ -239,6 +254,10 @@ page 50280 "Generic Page"
         end;
         if visibleFieldType.IsDate then begin
             SeeDate := true;
+            exit;
+        end;
+        if visibleFieldType.IsDateTime then begin
+            SeeDateTime := true;
             exit;
         end;
     end;
@@ -277,14 +296,13 @@ page 50280 "Generic Page"
         exit(true);
     end;
 
-    local procedure OpenFullRequestAsText(baseRequest: JsonObject; var result: JsonObject): Boolean
+    local procedure OpenFullRequestAsText(baseRequest: JsonObject; setEmptyToNull: Boolean; var result: JsonObject): Boolean
     var
         _p: Page "Generic Page";
         _key: Text;
         _v: Variant;
     begin
-        foreach _key in baseRequest.Keys do
-            baseRequest.Replace(_key, GetDefaultValueAndFieldTypeByText(L.GetElement(_key, baseRequest), _v));
+        baseRequest := ConvertSchemeObjectToValidForm(baseRequest.AsToken(), setEmptyToNull).AsObject();
         _p.SetVisibile('Full Base Request', '');
         _p.SetTextValue(Format(baseRequest));
         _p.LookupMode(true);
@@ -292,6 +310,33 @@ page 50280 "Generic Page"
             exit;
 
         exit(result.ReadFrom(_p.GetPageValue('').AsText()));
+    end;
+
+    local procedure ConvertSchemeObjectToValidForm(request: JsonToken; setToEmpty: Boolean): JsonToken
+    var
+        _token: JsonToken;
+        _key: Text;
+        _v: Variant;
+        _result: JsonObject;
+        _array: JsonArray;
+    begin
+        if request.IsObject then begin
+            foreach _key in request.AsObject().Keys do begin
+                _token := L.GetElement(_key, request.AsObject());
+                _result.Add(_key, ConvertSchemeObjectToValidForm(_token, setToEmpty));
+            end;
+            exit(_result.AsToken());
+        end;
+        if request.IsArray then begin
+            request.AsArray().Get(0, _token);
+            _array.Add(ConvertSchemeObjectToValidForm(_token, setToEmpty));
+            exit(_array.AsToken());
+        end;
+        if request.IsValue then begin
+            if setToEmpty then
+                exit;
+            exit(GetDefaultValueAndFieldTypeByText(request, _v).AsToken());
+        end;
     end;
 
     local procedure AddValueToRequest(keyArg: Text; singleToken: JsonToken; var result: JsonValue): Boolean
@@ -396,13 +441,16 @@ page 50280 "Generic Page"
         BaseNumericLbl: Label '0';
         BaseBooleanLbl: Label 'false';
         BaseDateLbl: Label '2024';
+        BaseDateTimeLbl: Label '2024T12:00';
         SeeText: Boolean;
         DecimalVar: Decimal;
         SeeDecimal: Boolean;
         BooleanVar: Boolean;
         SeeBoolean: Boolean;
         DateVar: Date;
+        DateTimeVar: DateTime;
         SeeDate: Boolean;
+        SeeDateTime: Boolean;
 }
 
 controladdin LabelReSizer
